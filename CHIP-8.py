@@ -93,3 +93,13 @@ class Processor:
             # Skip next instruction if Vx == kk
             if self.register[vX] == (opcode & 0x00FF):
                 self.pc += 2
+
+chip8 =  Processor(name="CHIP-8")
+
+# Define a sample ROM (replace this with a real ROM file or data)
+sample_rom = [0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF]
+
+chip8.loadROM(sample_rom)
+
+for _ in range(100):
+    chip8.cycle()
