@@ -1,7 +1,7 @@
 # Based on Jason/ loktar00's CHIP-8 Javascript code- https://github.com/loktar00/chip8/blob/master/chip8.js 
 # Along with Tobias V. Langhoff's "Guide to making a CHIP-8 emulator" - https://tobiasvl.github.io/blog/write-a-chip-8-emulator/ 
 #
-#
+# screen, pixelsize, width, and height still need to be defined (along with graphics engine that is)
 
 import numpy as np
 import keyboard
