@@ -11,7 +11,7 @@ class Processor:
   	self.displayFlag = false;
   	self.step = 0;
   
-  	# program counter
+  	# program counter, should get incremented by 2 after reading an opcode
   	self.pc = 0x200;
   	# stack pointer;
   	self.sp = null;
@@ -40,6 +40,11 @@ class Processor:
     self.currentKey = false;
   	self.delayTimer = 0;
   	self.soundTimer = 0;
+  #00E0 clear screen (set display array to all 0) 
+  #1NNN = Jump, set PC to whatever NNN is
+  #2NNN = Will call the subroutine in location NNN, pop the last address in the stack and make that the PC
+  #00EE will return back to the opcodes (like RET in assembly)
+  #3XNN is used as skip 
     
   def say_hi(self):
     print('Hello, my name is', self.name)
