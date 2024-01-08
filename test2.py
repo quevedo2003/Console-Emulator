@@ -3,7 +3,7 @@ import numpy as np
 class Processor:
 
   def __init__(self,name):
-    self.memory = [4096];
+    self.memory = ndarray[4096];
   	self.register = [16];
   	self.stack = [16];
   	self.i = null;
