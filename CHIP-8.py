@@ -28,6 +28,22 @@ class Processor:
         self.keys = []
         self.keyMap = {
             # Key mapping here
+              49: 0x1,  # 1
+              50: 0x2,  # 2
+              51: 0x3,  # 3
+              52: 0x4,  # 4
+              81: 0x5,  # Q
+              87: 0x6,  # W
+              69: 0x7,  # E
+              82: 0x8,  # R
+              65: 0x9,  # A
+              83: 0xA,  # S
+              68: 0xB,  # D
+              70: 0xC,  # F
+              90: 0xD,  # Z
+              88: 0xE,  # X
+              67: 0xF,  # C
+              86: 0x10  # V
         }
 
         self.currentKey = False
@@ -37,6 +53,23 @@ class Processor:
         # Load fontSet
         self.fontSet = np.array([
             # FontSet values here
+           0xF0, 0x90, 0x90, 0x90, 0xF0, ##0
+           0x20, 0x60, 0x20, 0x20, 0x70, ##1
+           0xF0, 0x10, 0xF0, 0x80, 0xF0, ##2
+           0xF0, 0x10, 0xF0, 0x10, 0xF0, ##3
+           0x90, 0x90, 0xF0, 0x10, 0x10, ##4
+           0xF0, 0x80, 0xF0, 0x10, 0xF0, ##5
+           0xF0, 0x80, 0xF0, 0x90, 0xF0, ##6
+           0xF0, 0x10, 0x20, 0x40, 0x40, ##7
+           0xF0, 0x90, 0xF0, 0x90, 0xF0, ##8
+           0xF0, 0x90, 0xF0, 0x10, 0xF0, ##9
+           0xF0, 0x90, 0xF0, 0x90, 0x90, ##A
+           0xE0, 0x90, 0xE0, 0x90, 0xE0, ##B
+           0xF0, 0x80, 0x80, 0x80, 0xF0, ##C
+           0xE0, 0x90, 0x90, 0x90, 0xE0, ##D
+           0xF0, 0x80, 0xF0, 0x80, 0xF0, ##E
+           0xF0, 0x80, 0xF0, 0x80, 0x80  ##F
+
         ])
         self.memory[0:self.fontSet.size] = self.fontSet[0:]
 
@@ -98,6 +131,19 @@ class Processor:
             # Skip next instruction if Vx == kk
             if self.register[vX] == (opcode & 0x00FF):
                 self.pc += 2
+        elif opcode_type == 0x4:
+            if self.register[vX] != (opcode & 0x00FF):
+                self.pc += 2
+        elif opcode_type == 0x5:
+            if self.register[vX] == self.register[vY]:
+                self.pc += 2
+        elif opcode_type == 0x9:
+            if self.register[vX] != self.register[vY]:
+                self.pc += 2
+        elif opcode_type == 0x6:
+            self.register[vX] = (opcode & 0x00FF)
+        elif opcode_type == 0x7:
+            self.register[vX] = ((opcode & 0x00FF) + self.register[vX])
 
 chip8 =  Processor(name="CHIP-8")
 
