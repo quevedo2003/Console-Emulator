@@ -234,9 +234,9 @@ class Processor:
                 self.memory[self.i+1] = temp/10
                 temp %= 10
                 self.memory[self.i+2] = temp
-                #needs to get fixed 
+                #needs to get fixed, this may or may not work, have to test locally
             elif lastbyte == 0x55:
-                #takes the values from v0 to vX and will store them into memory starting at index til index + vX
+                #takes the values from v0 to vX and will store them in memory starting at index til index + vX
                 count = 0
                 while count <= vX:
                    self.memory[self.i + count] =  self.register[count]
