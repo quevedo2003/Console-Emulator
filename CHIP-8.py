@@ -4,6 +4,7 @@
 # screen, pixelsize, width, and height still need to be defined (along with graphics engine that is)
 
 import numpy as np
+import random as rand
 import keyboard
 
 class Processor:
@@ -132,18 +133,95 @@ class Processor:
             if self.register[vX] == (opcode & 0x00FF):
                 self.pc += 2
         elif opcode_type == 0x4:
+            # Skip next instructiom if Vx != kk
             if self.register[vX] != (opcode & 0x00FF):
                 self.pc += 2
         elif opcode_type == 0x5:
+            # Skip next instruction if Vx == Vy
             if self.register[vX] == self.register[vY]:
                 self.pc += 2
-        elif opcode_type == 0x9:
-            if self.register[vX] != self.register[vY]:
-                self.pc += 2
         elif opcode_type == 0x6:
+            # Make vX == NNN
             self.register[vX] = (opcode & 0x00FF)
         elif opcode_type == 0x7:
+            # Make vX == NNN + vX
             self.register[vX] = ((opcode & 0x00FF) + self.register[vX])
+        elif opcode_type == 0x8: 
+            # Logical operations
+            lastnib = opcode & 0x000F #only need the last 4 bits
+            if lastnib == 0:
+                # Make vX == vY
+                self.register[vX] = vY;
+            elif lastnib == 1:
+                # Preform bitwise OR between vX and vY
+                self.register[vX] = self.register[vX] | self.register[vY]
+            elif lastnib == 2:
+                # Preform bitwise AND between vX and vY
+                self.register[vX] = self.register[vX] & self.register[vY]
+            elif lastnib == 3:
+                # Preform bitwise XOR between vX and vY
+                self.register[vX] = self.register[vX] ^ self.register[vY]
+            elif lastnib == 4:
+                # Add whatever is in vX with whatever is in vY
+                self.register[vX] = self.register[vX] + self.register[vY]
+                if self.register[vX] > 255:
+                    self.displayFlag = True
+            elif lastnib == 5:
+                # Subtract vX = vY
+                self.register[vX] = self.register[vX] - self.register[vY]
+            elif lastnib == 6:
+                ## bit wise right shift
+                self.register[vX] = self.register[vY]
+                bitshifted = self.register[vX] & 0x8000
+                self.register[vX] = self.register[vX]>>1
+                self.displayFlag = bitshifted
+            elif lastnib == 7:
+                #substract vY - vX
+                self.register[vX] = self.register[vY] - self.register[vX]
+            elif lastnib == 0xE:
+                ## bitwise left shift
+                self.register[vX] = self.register[vY]
+                bitshifted = self.register[vX] & 0x0001
+                self.register[vX] = self.register[vX]<<1
+                self.displayFlag = bitshifted
+        elif opcode_type == 0x9:
+            # Skip next instructiom  if Vx != Vy
+            if self.register[vX] != self.register[vY]:
+                self.pc += 2
+        elif opcode_type == 0xA:
+            self.i = (opcode & 0x0FFF)
+        elif opcode_type == 0xB:
+            ## have to choose which method to do with this, this is about jumping with either usings v0 or vN
+        elif opcode_type == 0xC:
+            #generate a random number and do bitwise AND and put that into vX
+            randomnum = rand.random()
+            self.register[vX] = randomnum & (opcode & 0x00FF)
+        elif opcode_type == 0xD:
+            #need help with this one, draw N pixel tall sprite from a mem location that the indesx register has on and x,y coordinate x being the value in vX and y being the value in vY
+        elif opcode_type == 0xE:
+            if(opcode & 0x00FF) == 0x9E:
+                if self.register[vX] == self.key[0]: #needs to get fixed
+                    self.pc += 2
+            elif (opcode & 0x00FF) == 0xA1:
+                if self.register[vY] != self.key[0]: #also needs to get fixed
+                    self.pc += 2
+        elif opcode_type == 0xF:
+            lastbyte = (opcode & 0x00FF)
+            if lastbyte == 0x07:
+                self.register[vX] = self.delayTimer
+            elif lastbyte == 0x15:
+                self.delayTimer = self.register[vX]
+            elif lastbyte == 0x18:
+                self.soundTimer = self.register[vX]
+            elif lastbyte == 0x1E:
+                self.i += self.register[vX]
+            elif lastbyte == 0x0A:
+                #stop excecution (help on this)
+            elif lastbyte == 0x29:
+                self.i = 1 #just a place holder, need help with this
+            elif lastbyte == 0x33:
+            elif lastbyte == 0x55:
+            elif lastbyte == 0x65:
 
 chip8 =  Processor(name="CHIP-8")
 
