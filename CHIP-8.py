@@ -133,7 +133,7 @@ class Processor:
             if self.register[vX] == (opcode & 0x00FF):
                 self.pc += 2
         elif opcode_type == 0x4:
-            # Skip next instructiom if Vx != kk
+            # Skip next instruction if Vx != kk
             if self.register[vX] != (opcode & 0x00FF):
                 self.pc += 2
         elif opcode_type == 0x5:
