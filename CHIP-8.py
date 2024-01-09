@@ -15,7 +15,7 @@ class Processor:
         self.memory = np.zeros((1, 4096))
         self.register = np.zeros((1, 16))
         self.stack = np.zeros((1, 16))
-        self.i = None
+        self.i = 0
         self.display = np.zeros((64, 32))
         self.displayFlag = False
         self.step = 0
@@ -200,28 +200,50 @@ class Processor:
             #need help with this one, draw N pixel tall sprite from a mem location that the indesx register has on and x,y coordinate x being the value in vX and y being the value in vY
         elif opcode_type == 0xE:
             if(opcode & 0x00FF) == 0x9E:
+                #if the key equals to corresponding value in vX, skip instruction
                 if self.register[vX] == self.key[0]: #needs to get fixed
                     self.pc += 2
             elif (opcode & 0x00FF) == 0xA1:
+                #if the key is not equal to corresponding value in vX, skip instruction
                 if self.register[vY] != self.key[0]: #also needs to get fixed
                     self.pc += 2
         elif opcode_type == 0xF:
             lastbyte = (opcode & 0x00FF)
             if lastbyte == 0x07:
+                #make vX == to delay timer
                 self.register[vX] = self.delayTimer
             elif lastbyte == 0x15:
+                # make delay == to vX
                 self.delayTimer = self.register[vX]
             elif lastbyte == 0x18:
+                #make sound == to vX
                 self.soundTimer = self.register[vX]
             elif lastbyte == 0x1E:
+                # add vX to index
                 self.i += self.register[vX]
             elif lastbyte == 0x0A:
                 #stop excecution (help on this)
             elif lastbyte == 0x29:
                 self.i = 1 #just a place holder, need help with this
             elif lastbyte == 0x33:
+                #takes the number in vX and converts it into 3 decimal digit then stores them in memory address starting at idx
+                self.memory[self.i] = self.register[vX] % 100
+                self.memory[self.i+1] = self.register[vX]%10
+                self.memory[self.i+2] = self.register[vX] 
+                #needs to get fixed 
             elif lastbyte == 0x55:
+                #takes the values from v0 to vX and will store them into memory starting at index til index + vX
+                count = 0
+                while count <= vX:
+                   self.memory[self.i + count] =  self.register[count]
+                   count += 1
             elif lastbyte == 0x65:
+                #will load v0 to vX from mem locations index to index+vX
+                count = 0
+                while count <= vX:
+                    self.register[count] = self.memory[self.i + count]
+                    count += 1
+
 
 chip8 =  Processor(name="CHIP-8")
 
