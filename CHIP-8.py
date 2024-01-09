@@ -192,6 +192,8 @@ class Processor:
             self.i = (opcode & 0x0FFF)
         elif opcode_type == 0xB:
             ## have to choose which method to do with this, this is about jumping with either usings v0 or vN
+            ## do first method
+            self.pc = self.register[0] + (opcode & 0x0FFF)
         elif opcode_type == 0xC:
             #generate a random number and do bitwise AND and put that into vX
             randomnum = rand.random()
@@ -227,9 +229,11 @@ class Processor:
                 self.i = 1 #just a place holder, need help with this
             elif lastbyte == 0x33:
                 #takes the number in vX and converts it into 3 decimal digit then stores them in memory address starting at idx
-                self.memory[self.i] = self.register[vX] % 100
-                self.memory[self.i+1] = self.register[vX]%10
-                self.memory[self.i+2] = self.register[vX] 
+                self.memory[self.i] = self.register[vX] / 100
+                temp = self.register[vX]%10
+                self.memory[self.i+1] = temp/10
+                temp %= 10
+                self.memory[self.i+2] = temp
                 #needs to get fixed 
             elif lastbyte == 0x55:
                 #takes the values from v0 to vX and will store them into memory starting at index til index + vX
