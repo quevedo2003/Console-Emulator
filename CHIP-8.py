@@ -1,19 +1,25 @@
 # Based on Jason/ loktar00's CHIP-8 Javascript code- https://github.com/loktar00/chip8/blob/master/chip8.js 
 # Along with Tobias V. Langhoff's "Guide to making a CHIP-8 emulator" - https://tobiasvl.github.io/blog/write-a-chip-8-emulator/ 
 #
-# screen, pixelsize, width, and height still need to be defined (along with graphics engine that is)
-
+##Still getting errors with XOR operation
+import os
+import sys
+import sdl2
+import sdl2.ext
 import numpy as np
 import random as rand
 import keyboard
+
+filepath = os.path.abspath(os.path.dirname(__file__))
+RESOURCES = sdl2.ext.Resources(filepath, "resources")
 
 class Processor:
     def __init__(self, name):
         # Initialization code here
         self.width = 64  # Define appropriate values for width and height
         self.height = 32
-        self.memory = np.zeros((1, 4096))
-        self.register = np.zeros((1, 16))
+        self.memory = np.zeros(4096, dtype=np.uint8)
+        self.register = np.zeros(16, dtype=np.uint8)
         self.stack = np.zeros((1, 16))
         self.i = 0
         self.display = np.zeros((64, 32))
@@ -72,11 +78,12 @@ class Processor:
            0xF0, 0x80, 0xF0, 0x80, 0x80  ##F
 
         ])
-        self.memory[0:self.fontSet.size] = self.fontSet[0:]
+        self.memory[0:len(self.fontSet)] = self.fontSet
+
 
     def loadROM(self, rom):
         ROM = np.array(rom)
-        self.memory[0x200:ROM.size] = ROM[0:]
+        self.memory[0x200:0x200 + ROM.size] = ROM[:]
         self.cycle()
 
     def cycle(self):
@@ -86,20 +93,21 @@ class Processor:
         if self.step % 2:
             if self.delayTimer > 0:
                 self.delayTimer -= 1
-
         # Draw to the screen
         if self.displayFlag:
-            x, y = np.meshgrid(range(self.width), range(self.height))
-            x = x.flatten()
-            y = y.flatten()
-
-            black_pixels = self.display.flatten() == 1
-            gray_pixels = ~black_pixels
-
-            self.display[x[black_pixels], y[black_pixels]] = 1
-            self.display[x[gray_pixels], y[gray_pixels]] = 0
-
+            self.render()
             self.displayFlag = False
+
+    def render(self):
+        x, y = np.meshgrid(range(self.width), range(self.height))
+        x = x.flatten()
+        y = y.flatten()
+
+        black_pixels = self.display.flatten() == 1
+        gray_pixels = ~black_pixels
+
+        self.display[x[black_pixels], y[black_pixels]] = 1
+        self.display[x[gray_pixels], y[gray_pixels]] = 0
 
     def opCode(self):
         pc = self.pc
@@ -142,7 +150,15 @@ class Processor:
                 self.pc += 2
         elif opcode_type == 0x6:
             # Make vX == NNN
-            self.register[vX] = (opcode & 0x00FF)
+            vX = (opcode & 0x0F00) >> 8
+            vY = (opcode & 0x00F0) >> 4
+
+            # Check if vX and vY are within the valid range
+            if 0 <= vX < 16 and 0 <= vY < 16:
+                self.register[vX] = (opcode & 0x00FF)
+            else:
+                # Handle the error or log a message
+                print("Invalid register index:", vX, vY)
         elif opcode_type == 0x7:
             # Make vX == NNN + vX
             self.register[vX] = ((opcode & 0x00FF) + self.register[vX])
@@ -151,7 +167,7 @@ class Processor:
             lastnib = opcode & 0x000F #only need the last 4 bits
             if lastnib == 0:
                 # Make vX == vY
-                self.register[vX] = vY;
+                self.register[vX] = vY
             elif lastnib == 1:
                 # Preform bitwise OR between vX and vY
                 self.register[vX] = self.register[vX] | self.register[vY]
@@ -160,7 +176,7 @@ class Processor:
                 self.register[vX] = self.register[vX] & self.register[vY]
             elif lastnib == 3:
                 # Preform bitwise XOR between vX and vY
-                self.register[vX] = self.register[vX] ^ self.register[vY]
+                self.register[vX] = self.register[vY] ^ self.register[vX]
             elif lastnib == 4:
                 # Add whatever is in vX with whatever is in vY
                 self.register[vX] = self.register[vX] + self.register[vY]
@@ -199,15 +215,33 @@ class Processor:
             randomnum = rand.random()
             self.register[vX] = randomnum & (opcode & 0x00FF)
         elif opcode_type == 0xD:
-            #need help with this one, draw N pixel tall sprite from a mem location that the indesx register has on and x,y coordinate x being the value in vX and y being the value in vY
+            x_coord = self.register[vX]
+            y_coord = self.register[vY]
+            height = opcode & 0x000F
+
+            self.displayFlag = True  # Set the flag to update the display
+
+            for y_line in range(height):
+                sprite_byte = self.memory[self.i + y_line]
+                for x_line in range(8):
+                    pixel_value = (sprite_byte >> (7 - x_line)) & 0x01
+                    x_pixel = (x_coord + x_line) % self.width
+                    y_pixel = (y_coord + y_line) % self.height
+
+                    # XOR the pixel value with the current display value using the Python XOR operator
+                    self.display[x_pixel, y_pixel] = self.display[x_pixel, y_pixel] ^ pixel_value
+
+
+            self.displayFlag = True  # Set the flag to update the display
+
         elif opcode_type == 0xE:
             if(opcode & 0x00FF) == 0x9E:
                 #if the key equals to corresponding value in vX, skip instruction
-                if self.register[vX] == self.key[0]: #needs to get fixed
+                if self.register[vX] == self.keys[0]: #needs to get fixed
                     self.pc += 2
             elif (opcode & 0x00FF) == 0xA1:
                 #if the key is not equal to corresponding value in vX, skip instruction
-                if self.register[vY] != self.key[0]: #also needs to get fixed
+                if self.register[vY] != self.keys[0]: #also needs to get fixed
                     self.pc += 2
         elif opcode_type == 0xF:
             lastbyte = (opcode & 0x00FF)
@@ -221,20 +255,30 @@ class Processor:
                 #make sound == to vX
                 self.soundTimer = self.register[vX]
             elif lastbyte == 0x1E:
-                # add vX to index
+                # add the value in vX to the index register
                 self.i += self.register[vX]
             elif lastbyte == 0x0A:
-                #stop excecution (help on this)
+                # stop execution and wait for key press, store key value in vX
+                key_pressed = False
+                for key, value in self.keyMap.items():
+                    if keyboard.is_pressed(str(key)):
+                        self.register[vX] = value
+                        key_pressed = True
+                        break
+                if not key_pressed:
+                    # Skip the current cycle if no key is pressed
+                    self.pc -= 2
             elif lastbyte == 0x29:
-                self.i = 1 #just a place holder, need help with this
+                # set index to the address of the sprite for the character in vX
+                self.i = self.register[vX] * 5  # Assuming each character is 5 bytes long
             elif lastbyte == 0x33:
-                #takes the number in vX and converts it into 3 decimal digit then stores them in memory address starting at idx
-                self.memory[self.i] = self.register[vX] / 100
-                temp = self.register[vX]%10
-                self.memory[self.i+1] = temp/10
-                temp %= 10
-                self.memory[self.i+2] = temp
-                #needs to get fixed, this may or may not work, have to test locally
+                # takes the number in vX and converts it into 3 decimal digits, then stores them in memory starting at idx
+                value = self.register[vX]
+                self.memory[self.i] = value // 100
+                value %= 100
+                self.memory[self.i + 1] = value // 10
+                value %= 10
+                self.memory[self.i + 2] = value
             elif lastbyte == 0x55:
                 #takes the values from v0 to vX and will store them in memory starting at index til index + vX
                 count = 0
@@ -248,13 +292,52 @@ class Processor:
                     self.register[count] = self.memory[self.i + count]
                     count += 1
 
+class SoftwareRenderer(sdl2.ext.SoftwareSpriteRenderSystem):
+    def __init__(self, window, processor):
+        super(SoftwareRenderer, self).__init__(window)
+        self.processor = processor
+        self.scale_factor = 10
 
-chip8 =  Processor(name="CHIP-8")
+    def render(self, components):
+        sdl2.ext.fill(self.surface, sdl2.ext.Color(0, 0, 0))
+        super(SoftwareRenderer, self).render(components)
 
-# Define a sample ROM (replace this with a real ROM file or data)
-sample_rom = [0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF]
+        # Scale up the display
+        scaled_display = np.kron(self.processor.display, np.ones((self.scale_factor, self.scale_factor)))
 
-chip8.loadROM(sample_rom)
+        # Copy the scaled display to the renderer's surface
+        for y in range(scaled_display.shape[1]):
+            for x in range(scaled_display.shape[0]):
+                if scaled_display[x, y] == 1:
+                    self.surface[x, y] = sdl2.ext.Color(255, 255, 255)
 
-for _ in range(100):
-    chip8.cycle()
+    
+if __name__ == "__main__":
+    ### ROM ###
+    ROM = [
+    0xA2, 0x1E, 0x62, 0x00, 0x63, 0x00, 0xF2, 0x29, 0xD2, 0x33,  # 'H'
+    0xF2, 0x25, 0xD2, 0x33,  # 'E'
+    0xF2, 0x21, 0xD2, 0x33,  # 'L'
+    0xF2, 0x21, 0xD2, 0x33,  # 'L'
+    0xF2, 0x27, 0xD2, 0x33,  # 'O'
+]
+    ###########
+    chip8 = Processor(name="CHIP-8")
+    chip8.loadROM(ROM)
+
+    sdl2.ext.init()
+    window = sdl2.ext.Window("CHIP-8 Emulator", size=(640, 320))
+    window.show()
+
+    renderer = SoftwareRenderer(window, chip8)
+
+    running = True
+    while running:
+        for event in sdl2.ext.get_events():
+            if event.type == sdl2.SDL_QUIT:
+                running = False
+                break
+
+        chip8.cycle()
+        renderer.render([])  # Pass an empty array as there's no need for components
+        sdl2.SDL_Delay(10)
