@@ -1,4 +1,4 @@
-# Based on Jason/ loktar00's CHIP-8 Javascript code- https://github.com/loktar00/chip8/blob/master/chip8.js 
+## Based on Jason/ loktar00's CHIP-8 Javascript code- https://github.com/loktar00/chip8/blob/master/chip8.js 
 # Along with Tobias V. Langhoff's "Guide to making a CHIP-8 emulator" - https://tobiasvl.github.io/blog/write-a-chip-8-emulator/ 
 #
 ##Still getting errors with XOR operation
