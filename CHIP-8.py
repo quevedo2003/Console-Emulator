@@ -170,7 +170,7 @@ class Processor:
                 lastnib = opcode & 0x000F #only need the last 4 bits
                 if lastnib == 0:
                     # Make vX == vY
-                    self.register[vX] = vY
+                    self.register[vX] = self.register[vY]
                 elif lastnib == 1:
                     # Preform bitwise OR between vX and vY
                     self.register[vX] = self.register[vX] | self.register[vY]
