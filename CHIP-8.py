@@ -1,6 +1,7 @@
 ## Based on Jason/ loktar00's CHIP-8 Javascript code- https://github.com/loktar00/chip8/blob/master/chip8.js 
 # Along with Tobias V. Langhoff's "Guide to making a CHIP-8 emulator" - https://tobiasvl.github.io/blog/write-a-chip-8-emulator/ 
 #
+# We'll use sys to properly exit with an error code."""The almighty Hello World! example"""
 # We'll use sys to properly exit with an error code.
 import os
 import sys
@@ -170,7 +171,7 @@ class Processor:
                 lastnib = opcode & 0x000F #only need the last 4 bits
                 if lastnib == 0:
                     # Make vX == vY
-                    self.register[vX] = self.register[vY]
+                    self.register[vX] = vY
                 elif lastnib == 1:
                     # Preform bitwise OR between vX and vY
                     self.register[vX] = self.register[vX] | self.register[vY]
@@ -306,18 +307,26 @@ class SoftwareRenderer(sdl2.ext.SoftwareSpriteRenderSystem):
 
     def render(self, components):
         sdl2.ext.fill(self.surface, sdl2.ext.Color(0, 0, 0))
-        super(SoftwareRenderer, self).render(components)
-
-        pixels = sdl2.ext.pixels2d(self.surface)
 
         # Access the display array from the processor
         display = self.processor.display
 
-        # Copy the display to the renderer's surface
-        for y in range(display.shape[1]):
-            for x in range(display.shape[0]):
+        # Lock the surface for direct pixel access
+        pixels = sdl2.ext.PixelView(self.surface)
+
+        # Draw to the renderer's surface directly
+        for x in range(display.shape[0]):
+            for y in range(display.shape[1]):
                 if display[x, y] == 1:
-                    pixels[y, x] = sdl2.ext.Color(255, 255, 255)  # Swap x and y here
+                    pixels[y, x] = sdl2.ext.Color(255, 255, 255)  # Set pixel color
+
+        # Unlock the surface
+        del pixels
+
+        super(SoftwareRenderer, self).render(components)
+
+
+
 
     
 if __name__ == "__main__":
@@ -359,7 +368,6 @@ if __name__ == "__main__":
                 break
 
         chip8.cycle()
-        renderer.render([])  # Pass an empty array as there's no need for components
-
-        sdl2.SDL_RenderPresent(renderer.renderer)  # Access the SDL sprite renderer instance
+        renderer.render([])
+        sdl2.ext.Window.refresh(window)
         sdl2.SDL_Delay(10)
