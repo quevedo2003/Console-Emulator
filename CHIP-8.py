@@ -1,7 +1,7 @@
 ## Based on Jason/ loktar00's CHIP-8 Javascript code- https://github.com/loktar00/chip8/blob/master/chip8.js 
 # Along with Tobias V. Langhoff's "Guide to making a CHIP-8 emulator" - https://tobiasvl.github.io/blog/write-a-chip-8-emulator/ 
 #
-# Still getting errors with XOR operation
+# We'll use sys to properly exit with an error code.
 import os
 import sys
 import sdl2
@@ -317,9 +317,7 @@ class SoftwareRenderer(sdl2.ext.SoftwareSpriteRenderSystem):
         for y in range(display.shape[1]):
             for x in range(display.shape[0]):
                 if display[x, y] == 1:
-                    print(f"Display[{x}, {y}] = {display[x, y]}")  # Add debugging output
-                    pixels[x, y] = sdl2.ext.Color(255, 255, 255)
-
+                    pixels[y, x] = sdl2.ext.Color(255, 255, 255)  # Swap x and y here
 
     
 if __name__ == "__main__":
@@ -343,9 +341,14 @@ if __name__ == "__main__":
     chip8.loadROM(ROM)
 
     sdl2.ext.init()
-    window = sdl2.ext.Window("CHIP-8 Emulator", size=(640, 320))
+    
+    # Set the window size as a tuple
+    window_size = (640, 320)
+    
+    window = sdl2.ext.Window("CHIP-8 Emulator", size=window_size)
     window.show()
 
+    # Create the SDL renderer once
     renderer = SoftwareRenderer(window, chip8)
 
     running = True
@@ -357,4 +360,6 @@ if __name__ == "__main__":
 
         chip8.cycle()
         renderer.render([])  # Pass an empty array as there's no need for components
+
+        sdl2.SDL_RenderPresent(renderer.renderer)  # Access the SDL sprite renderer instance
         sdl2.SDL_Delay(10)
