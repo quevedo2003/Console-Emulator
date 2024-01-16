@@ -155,14 +155,12 @@ class Processor:
             elif opcode_type == 0x6:
                 # Make vX == NNN
                 vX = (opcode & 0x0F00) >> 8
-                vY = (opcode & 0x00F0) >> 4
-
                 # Check if vX and vY are within the valid range
-                if 0 <= vX < 16 and 0 <= vY < 16:
+                if 0 <= vX < 16:
                     self.register[vX] = (opcode & 0x00FF)
                 else:
                     # Handle the error or log a message
-                    print("Invalid register index:", vX, vY)
+                    print("Invalid register index:", vX)
             elif opcode_type == 0x7:
                 # Make vX == NNN + vX
                 self.register[vX] = ((opcode & 0x00FF) + self.register[vX])
