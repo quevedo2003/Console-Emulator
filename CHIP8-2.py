@@ -112,8 +112,7 @@ class Processor:
 
     def opCode(self):
         pc = self.pc
-
-    # Check if pc and pc + 1 are within the valid range
+        # Check if pc and pc + 1 are within the valid range
         if pc >= 0 and pc + 1 < len(self.memory):
             opcode = (self.memory[pc] << 8) | self.memory[pc + 1]
             vX = (opcode & 0x0F00) >> 8
@@ -210,6 +209,7 @@ class Processor:
                     self.pc += 2
             elif opcode_type == 0xA:
                 self.i = (opcode & 0x0FFF)
+                print(self.i)
             elif opcode_type == 0xB:
                 ## have to choose which method to do with this, this is about jumping with either usings v0 or vN
                 ## do first method
@@ -220,8 +220,11 @@ class Processor:
                 self.register[vX] = randomnum & (opcode & 0x00FF)
             elif opcode_type == 0xD:
                 x_coord = self.register[vX]
+                print("X_COORD:", x_coord)
                 y_coord = self.register[vY]
+                print("Y_COORD:", y_coord)
                 height = opcode & 0x000F
+                print("HEIGHT:", height)
 
                 self.displayFlag = True  # Set the flag to update the display
 
@@ -305,7 +308,16 @@ if __name__ == "__main__":
     ROM = [
         0xA2, 0x1E,  # Set I to the address 0x21E
         0x62, 0x00,  # Set V2 to 0x00
-        # ... (remaining ROM instructions)
+        0x63, 0x00,  # Set V3 to 0x00
+        0xF2, 0x29,  # Set I to the address of 'H' in the font
+        0xD2, 0x3F,  # Draw 'H' at position (V2, V3)
+        0xF2, 0x25,  # Set I to the address of 'E' in the font
+        0xD2, 0x3F,  # Draw 'E'
+        0xF2, 0x21,  # Set I to the address of 'L' in the font
+        0xD2, 0x3F,  # Draw 'L'
+        0xF2, 0x27,  # Set I to the address of 'O' in the font
+        0xD2, 0x3F,  # Draw 'O'
+        0x00, 0xE0   # Clear the screen
     ]
     ###########
     chip8 = Processor(name="CHIP-8")
