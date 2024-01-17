@@ -17,13 +17,13 @@ RESOURCES = sdl2.ext.Resources(filepath, "resources")
 class Processor:
     def __init__(self, name):
         # Initialization code here
-        self.width = 64  # Define appropriate values for width and height
-        self.height = 32
+        self.width = 640  # Define appropriate values for width and height
+        self.height = 320
         self.memory = np.zeros(4096, dtype=np.uint8)
         self.register = np.zeros(16, dtype=np.uint8)
         self.stack = np.zeros((1, 16), dtype=np.uint8)
         self.i = 0
-        self.display = np.zeros((64, 32), dtype=np.uint8)
+        self.display = np.zeros((640, 320), dtype=np.uint8)
         self.displayFlag = False
         self.step = 0
 
@@ -158,7 +158,7 @@ class Processor:
                 vY = (opcode & 0x00F0) >> 4
 
                 # Check if vX and vY are within the valid range
-                if 0 <= vX < 16 and 0 <= vY < 16:
+                if 0 <= vX < 16:
                     self.register[vX] = (opcode & 0x00FF)
                 else:
                     # Handle the error or log a message
@@ -234,6 +234,7 @@ class Processor:
 
                         # XOR the pixel value with the current display value using the Python XOR operator
                         self.display[x_pixel, y_pixel] = self.display[x_pixel, y_pixel] ^ pixel_value
+                        print(display[x_pixel, y_pixel])
 
 
                 self.displayFlag = True  # Set the flag to update the display
@@ -332,6 +333,7 @@ if __name__ == "__main__":
 
         # Draw directly on the window surface
         sdl2.ext.fill(window_surface, BLACK)
+        pixelview = sdl2.ext.PixelView(window_surface)
 
         # Access the display array from the processor
         display = chip8.display
@@ -340,8 +342,7 @@ if __name__ == "__main__":
         for x in range(display.shape[0]):
             for y in range(display.shape[1]):
                 if display[x, y] == 1:
-                    window_surface.pixelview[y][x] = WHITE
-
+                    pixelview[y][x] = WHITE
         window.refresh()
 
         sdl2.SDL_Delay(10)
