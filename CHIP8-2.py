@@ -33,7 +33,7 @@ class Processor:
         self.sp = None
 
         self.opcode = None
-        self.keys = []
+        self.keys = 0
         self.keyMap = {
             # Key mapping here
               49: 0x1,  # 1
@@ -80,6 +80,7 @@ class Processor:
 
         ])
         self.memory[0:len(self.fontSet)] = self.fontSet
+        print("first thing in memory: ", self.memory[0])
 
 
     def loadROM(self, rom):
@@ -130,7 +131,9 @@ class Processor:
                 elif sub_type == 0x00EE:
                     # Return from a subroutine
                     self.pc = self.stack[self.sp]
-                    self.sp -= 1
+                    self.stack[self.pc] = 0
+                    if self.sp > 0:
+                        self.sp -= 1
             elif opcode_type == 0x1:
                 # Jump to location nnn
                 self.pc = opcode & 0x0FFF
@@ -154,7 +157,6 @@ class Processor:
             elif opcode_type == 0x6:
                 # Make vX == NNN
                 vX = (opcode & 0x0F00) >> 8
-                vY = (opcode & 0x00F0) >> 4
 
                 # Check if vX and vY are within the valid range
                 if 0 <= vX < 16:
@@ -170,7 +172,7 @@ class Processor:
                 lastnib = opcode & 0x000F #only need the last 4 bits
                 if lastnib == 0:
                     # Make vX == vY
-                    self.register[vX] = vY
+                    self.register[vX] = self.register[vY]
                 elif lastnib == 1:
                     # Preform bitwise OR between vX and vY
                     self.register[vX] = self.register[vX] | self.register[vY]
@@ -185,8 +187,15 @@ class Processor:
                     self.register[vX] = self.register[vX] + self.register[vY]
                     if self.register[vX] > 255:
                         self.displayFlag = True
+                    else:
+                        self.displayFlag = False
                 elif lastnib == 5:
                     # Subtract vX = vY
+                    if(self.register[vX] < self.register[vY]):
+                        self.displayFlag = False
+                    else:
+                        self.displayFlag = True
+                    
                     self.register[vX] = self.register[vX] - self.register[vY]
                 elif lastnib == 6:
                     ## bit wise right shift
@@ -196,6 +205,10 @@ class Processor:
                     self.displayFlag = bitshifted
                 elif lastnib == 7:
                     #substract vY - vX
+                    if(self.register[vY] < self.register[vX]):
+                        self.displayFlag = False
+                    else:
+                        self.displayFlag = True
                     self.register[vX] = self.register[vY] - self.register[vX]
                 elif lastnib == 0xE:
                     ## bitwise left shift
@@ -216,7 +229,7 @@ class Processor:
                 self.pc = self.register[0] + (opcode & 0x0FFF)
             elif opcode_type == 0xC:
                 #generate a random number and do bitwise AND and put that into vX
-                randomnum = rand.random()
+                randomnum = rand.randint(0,255)
                 self.register[vX] = randomnum & (opcode & 0x00FF)
             elif opcode_type == 0xD:
                 x_coord = self.register[vX]
@@ -245,11 +258,11 @@ class Processor:
             elif opcode_type == 0xE:
                 if(opcode & 0x00FF) == 0x9E:
                     #if the key equals to corresponding value in vX, skip instruction
-                    if self.register[vX] == self.keys[0]: #needs to get fixed
+                    if self.register[vX] == self.keys:
                         self.pc += 2
                 elif (opcode & 0x00FF) == 0xA1:
                     #if the key is not equal to corresponding value in vX, skip instruction
-                    if self.register[vY] != self.keys[0]: #also needs to get fixed
+                    if self.register[vX] != self.keys:
                         self.pc += 2
             elif opcode_type == 0xF:
                 lastbyte = (opcode & 0x00FF)
