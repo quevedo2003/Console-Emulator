@@ -296,10 +296,9 @@ class Processor:
                     # takes the number in vX and converts it into 3 decimal digits, then stores them in memory starting at idx
                     value = self.register[vX]
                     self.memory[self.i] = value // 100
-                    value %= 100
-                    self.memory[self.i + 1] = value // 10
-                    value %= 10
-                    self.memory[self.i + 2] = value
+                    value /= 10
+                    self.memory[self.i + 1] = value % 10
+                    self.memory[self.i + 2] = self.register[vX]%10
                 elif lastbyte == 0x55:
                     #takes the values from v0 to vX and will store them in memory starting at index til index + vX
                     count = 0
