@@ -80,7 +80,6 @@ class Processor:
 
         ])
         self.memory[0:len(self.fontSet)] = self.fontSet
-        print("first thing in memory: ", self.memory[0])
 
 
     def loadROM(self, rom):
@@ -163,7 +162,7 @@ class Processor:
                     self.register[vX] = (opcode & 0x00FF)
                 else:
                     # Handle the error or log a message
-                    print("Invalid register index:", vX, vY)
+                    print("Invalid register index:", vX)
             elif opcode_type == 0x7:
                 # Make vX == NNN + vX
                 self.register[vX] = ((opcode & 0x00FF) + self.register[vX])
@@ -222,7 +221,6 @@ class Processor:
                     self.pc += 2
             elif opcode_type == 0xA:
                 self.i = (opcode & 0x0FFF)
-                print(self.i)
             elif opcode_type == 0xB:
                 ## have to choose which method to do with this, this is about jumping with either usings v0 or vN
                 ## do first method
@@ -233,14 +231,11 @@ class Processor:
                 self.register[vX] = randomnum & (opcode & 0x00FF)
             elif opcode_type == 0xD:
                 x_coord = self.register[vX]
-                print("X_COORD:", x_coord)
                 y_coord = self.register[vY]
-                print("Y_COORD:", y_coord)
                 height = opcode & 0x000F
-                print("HEIGHT:", height)
 
                 self.displayFlag = True  # Set the flag to update the display
-
+                #think this implementation is wrong, look at this tomorrow!!
                 for y_line in range(height):
                     sprite_byte = self.memory[self.i + y_line]
                     for x_line in range(8):
@@ -250,7 +245,6 @@ class Processor:
 
                         # XOR the pixel value with the current display value using the Python XOR operator
                         self.display[x_pixel, y_pixel] = self.display[x_pixel, y_pixel] ^ pixel_value
-                        print(display[x_pixel, y_pixel])
 
 
                 self.displayFlag = True  # Set the flag to update the display
@@ -318,18 +312,72 @@ class Processor:
 if __name__ == "__main__":
     ### ROM ###
     ROM = [
-        0xA2, 0x1E,  # Set I to the address 0x21E
-        0x62, 0x00,  # Set V2 to 0x00
-        0x63, 0x00,  # Set V3 to 0x00
-        0xF2, 0x29,  # Set I to the address of 'H' in the font
-        0xD2, 0x3F,  # Draw 'H' at position (V2, V3)
-        0xF2, 0x25,  # Set I to the address of 'E' in the font
-        0xD2, 0x3F,  # Draw 'E'
-        0xF2, 0x21,  # Set I to the address of 'L' in the font
-        0xD2, 0x3F,  # Draw 'L'
-        0xF2, 0x27,  # Set I to the address of 'O' in the font
-        0xD2, 0x3F,  # Draw 'O'
-        0x00, 0xE0   # Clear the screen
+    0x00, 0xE0, 
+    0xA2, 0x2A, 
+    0x60, 0x0C, 
+    0x61, 0x08, 
+    0xD0, 0x1F, 
+    0x70, 0x09,
+	0xA2, 0x39, 
+    0xD0, 0x1F, 
+    0xA2, 0x48, 
+    0x70, 0x08, 
+    0xD0, 0x1F, 
+    0x70, 0x04,
+	0xA2, 0x57, 
+    0xD0, 0x1F, 
+    0x70, 0x08, 
+    0xA2, 0x66, 
+    0xD0, 0x1F, 
+    0x70, 0x08,
+	0xA2, 0x75, 
+    0xD0, 0x1F, 
+    0x12, 0x28, 
+    0xFF, 0x00, 
+    0xFF, 0x00, 
+    0x3C, 0x00,
+	0x3C, 0x00, 
+    0x3C, 0x00, 
+    0x3C, 0x00, 
+    0xFF, 0x00, 
+    0xFF, 0xFF, 
+    0x00, 0xFF,
+	0x00, 0x38, 
+    0x00, 0x3F, 
+    0x00, 0x3F, 
+    0x00, 0x38, 
+    0x00, 0xFF, 
+    0x00, 0xFF,
+	0x80, 0x00, 
+    0xE0, 0x00, 
+    0xE0, 0x00, 
+    0x80, 0x00, 
+    0x80, 0x00, 
+    0xE0, 0x00,
+	0xE0, 0x00, 
+    0x80, 0xF8, 
+    0x00, 0xFC, 
+    0x00, 0x3E, 
+    0x00, 0x3F, 
+    0x00, 0x3B,
+	0x00, 0x39, 
+    0x00, 0xF8, 
+    0x00, 0xF8, 
+    0x03, 0x00, 
+    0x07, 0x00, 
+    0x0F, 0x00,
+	0xBF, 0x00, 
+    0xFB, 0x00, 
+    0xF3, 0x00, 
+    0xE3, 0x00, 
+    0x43, 0xE5, 
+    0x05, 0xE2,
+	0x00, 0x85, 
+    0x07, 0x81, 
+    0x01, 0x80, 
+    0x02, 0x80, 
+    0x02, 0xE6, 
+    0x02, 0xE7
     ]
     ###########
     chip8 = Processor(name="CHIP-8")
